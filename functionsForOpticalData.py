@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-#======Functions========
+#======PRIMARY Functions (always called by main.py)============================
 #----Locating Experimental Data----
 def locateData():
     """
@@ -19,7 +19,7 @@ def locateData():
         A list with the filePaths of all txt data found.
         
     txtFilesFoundSuccessfully: bool
-        Returns True if .txt spectrum files were found and False if nothing was found
+        Returns True if .txt spectra were found and False if nothing was found
     """
    
     cwd = os.getcwd()  # locating current directory
@@ -45,7 +45,7 @@ def locateData():
         print("Make sure your .txt spectra are located in subDir ~/InputData")
         txtFilesFoundSuccessfully=False
     return txtFilesFoundSuccessfully,numberOfSpectra,spectrumDataList
-#end function
+#end function------------------------------------------------------------------
 
 
 #---- Extracting data from first spectrum to act as a reference----
@@ -99,54 +99,7 @@ def TryReadFirstDataset(txtFileList):
     Wavelegths = np.array(Wavelegths)
     IntensitiesRef=np.array(IntensitiesRef)
     return launchTime,numberOfPointsInSpectrum,Wavelegths,IntensitiesRef
-#end function
-
-def wavelengthToIndex(reqWav,Wavelengths):
-    """
-    To be used by the functions module
-    DO NOT CALL
-    """
-    searchIndex=0
-    while(Wavelengths[searchIndex]<reqWav): searchIndex+=1
-    return searchIndex
-#end function
-
-#Visualize the first Spectrum
-def PlotFirstSpectrum(Wavelengths,IntensitiesRef):
-    """
-    Plots the Intestity vs Wavelength in the first spectrum recorded
-    
-    Parameters
-    ----------
-    Wavelegths : numpy.ndarray
-        Contains values from 1st column in spectrum .txt files, 
-        that corresponds to the wavelengths recorded by the optical sensor.
-        
-    IntensitiesRef : numpy.ndarray
-        Contains values from 2nd column in the first "reference" spectrum .txt file, 
-        that corresponds to the intensity recorded by the optical sensor.
-
-    Returns
-    -------
-    None.
-
-    """
-    fig,ax=plt.subplots()
-    ax.set_title("First Optical Spectrum")
-    ax.set_xlabel("Wavelength (nm)");ax.set_ylabel('Intensity')
-    plt.plot(Wavelengths,IntensitiesRef,ms=0.5)
-#end function
-
- 
-#Function assisting time-related calculations (Not to be called by the user)
-def calculateTimeSinceLaunch(launchTime,time):
-    """
-    To be used by the functions module
-    DO NOT CALL
-    """
-    return 24*(float(time[0])-float(launchTime[0]))+ (float(time[1])-float(launchTime[1]))+(float(time[2])-float(launchTime[2]))/60 +(float(time[3])-float(launchTime[3]))/3600
-#end function
-    
+#end function------------------------------------------------------------------
 
 #----Extract all intensity data----
 def ScanFiles(txtFileList,numberOfSpectra,numberOfPointsInSpectrum,launchTime,Wavelengths,integrStartWav,integrFinishWav,selectedWavelengths):
@@ -201,6 +154,7 @@ def ScanFiles(txtFileList,numberOfSpectra,numberOfPointsInSpectrum,launchTime,Wa
     
     #-find useful indices
     specIndex=0
+    print()
     firstIndex=wavelengthToIndex(integrStartWav,Wavelengths)
     lastIndex =wavelengthToIndex(integrFinishWav,Wavelengths)
     selectedIndices=[]
@@ -236,15 +190,15 @@ def ScanFiles(txtFileList,numberOfSpectra,numberOfPointsInSpectrum,launchTime,Wa
     #end for (files)
     print(f"all txt files scanned",end="\n\n")
     return  timesFromLaunchInHours,intensities,averageIntensities            
-#end function
+#end function------------------------------------------------------------------
 
-#-------------------------------------
+#----Plot the average intensity in ROI ---------------------------------
 def plotAverageIntensityOverTime(timesFromLaunchInHours,averageIntensities,integrStartWav,integrFinishWav):
     """
     Parameters
     ----------
     timesFromLaunchInHours : numpy.ndarray
-        Contains the time (in hours) passed since launch for each spectrum.
+        Contains the time (in hours) passed since launch forsss each spectrum.
     averageIntensities : numpy.ndarray
         Contains the intesity averaged in ROI for each spectrum .
 
@@ -260,71 +214,39 @@ def plotAverageIntensityOverTime(timesFromLaunchInHours,averageIntensities,integ
     plt.show()    
 #end function
 
+
+ 
+#========Helpful Functions Section (Not designed to be called in main.py)========
+def calculateTimeSinceLaunch(launchTime,time):
+    """
+    Function assisting time-related calculations
+    To be used by the functions module
+    DO NOT CALL
+    """
+    return 24*(float(time[0])-float(launchTime[0]))+ (float(time[1])-float(launchTime[1]))+(float(time[2])-float(launchTime[2]))/60 +(float(time[3])-float(launchTime[3]))/3600
+#end function
+
+def wavelengthToIndex(reqWav,Wavelengths):
+    """
+    To be used by the functions module
+    DO NOT CALL
+    """
+    searchIndex=0
+    while(Wavelengths[searchIndex]<reqWav): searchIndex+=1
+    return searchIndex
+#end function
+
 #--------------------------------------
 def TimeStampToIndex(requestedElapsedTime,timesFromLaunchInHours):
+    """
+    To be used by the functions module
+    DO NOT CALL
+    """
     #locating (by index) the spectrum with time closest to the requested time
     timeIndex=0
     while(timesFromLaunchInHours[timeIndex]<requestedElapsedTime): 
         timeIndex+=1
-    return timeIndex
-    
-#end function
-
-
-
-#-------------------------------------
-def plotSpectrumAtTimestamps(timesFromLaunchInHours,wavelengths,intensities,reqTimeStamps,isLoadingComp): 
-        fig3,ax3=plt.subplots()
-        ax3.set_xlabel("wavelength (nm)");ax3.set_ylabel('Intensity')
-        
-        #labeling
-        if(isLoadingComp):
-            labels=["Unloaded","Loaded"]
-        else:
-            labels=[]
-            for reqTimeStamp in reqTimeStamps:labels.append(f"time: {reqTimeStamp}")
-        
-        counter=0
-        for reqTimeStamp in reqTimeStamps:
-            timeIndex=TimeStampToIndex(reqTimeStamp,timesFromLaunchInHours)
-            plt.plot(wavelengths,intensities[timeIndex,:],ms=1,label=labels[counter])
-            counter+=1
-        ax3.legend()
-        plt.show()
-        return fig3
-#end function
-
-
-#----------------------------------------
-def getSelectedWavelengthsAtTimeStamp(requestedElapsedTime,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities):
-    """
-    To be used internally in the functions module
-    DO NOT CALL
-    """
-    
-    timeIndex=TimeStampToIndex(requestedElapsedTime,timesFromLaunchInHours)
-    #return the intensities of the selected Wavelengths for this spectrum
-    selectedIntensities=[]
-    for selectedWavelength in selectedWavelengths:
-        selectedIntensity = intensities[timeIndex,wavelengthToIndex(selectedWavelength,wavelengths)]
-        selectedIntensities.append(selectedIntensity)
-    #endFor
-    return selectedIntensities
-#end function
-
-def printUnloadedVsLoadedComparison(unloadedTimeStamp,loadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities):
-    """
-    DEPRECATED
-    DO NOT USE
-    """
-    unloadedSelectedIntensities = getSelectedWavelengthsAtTimeStamp(unloadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities)
-    loadedSelectedIntensities   = getSelectedWavelengthsAtTimeStamp(  loadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities)
-    print()
-    print(f"Unloaded VS Loaded Sample for Selected Wavelengths")
-    for i in range(len(unloadedSelectedIntensities)):
-        ratio = loadedSelectedIntensities[i]/unloadedSelectedIntensities[i]
-        lnRatio= -np.log(loadedSelectedIntensities[i]/unloadedSelectedIntensities[i])
-        print(f"wv: {selectedWavelengths[i]} nm: L/UnL: {ratio  } -ln(I(c)/Io) = { lnRatio }")
+    return timeIndex 
 #end function
 
 #-----------------------------------------------------------------------------
@@ -364,6 +286,59 @@ def GetStatisticsNearSelectedWavelengths(wavelengths,intensitiesSpec,selectedWav
         stdsIntensities.append(s)
     print()
     return meanIntensities, stdsIntensities
+#end function-----------------------------------------------------------------
+#==========================================================================================================
+
+#==================Optional Functionalities====================================
+#Visualize the first Spectrum
+def PlotFirstSpectrum(Wavelengths,IntensitiesRef):
+    """
+    Plots the Intestity vs Wavelength in the first spectrum recorded
+    
+    Parameters
+    ----------
+    Wavelegths : numpy.ndarray
+        Contains values from 1st column in spectrum .txt files, 
+        that corresponds to the wavelengths recorded by the optical sensor.
+        
+    IntensitiesRef : numpy.ndarray
+        Contains values from 2nd column in the first "reference" spectrum .txt file, 
+        that corresponds to the intensity recorded by the optical sensor.
+
+    Returns
+    -------
+    None.
+
+    """
+    fig,ax=plt.subplots()
+    ax.set_title("First Optical Spectrum")
+    ax.set_xlabel("Wavelength (nm)");ax.set_ylabel('Intensity')
+    plt.plot(Wavelengths,IntensitiesRef,ms=0.5)
+#end function
+
+
+
+#-------------------------------------
+def plotSpectrumAtTimestamps(timesFromLaunchInHours,wavelengths,intensities,reqTimeStamps,isLoadingComp): 
+        fig3,ax3=plt.subplots()
+        ax3.set_xlabel("wavelength (nm)");ax3.set_ylabel('Intensity')
+        
+        #labeling
+        if(isLoadingComp):
+            labels=["Unloaded","Loaded"]
+        else:
+            labels=[]
+            for reqTimeStamp in reqTimeStamps:labels.append(f"time: {reqTimeStamp}")
+        
+        counter=0
+        for reqTimeStamp in reqTimeStamps:
+            timeIndex=TimeStampToIndex(reqTimeStamp,timesFromLaunchInHours)
+            plt.plot(wavelengths,intensities[timeIndex,:],ms=1,label=labels[counter])
+            counter+=1
+        ax3.legend()
+        plt.show()
+        return fig3
+#end function
 
 
 def CompareStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHours,wavelengths,intensities,selectedWavelengths,unloadedTimeStamp,loadedTimeStamp):
@@ -420,4 +395,45 @@ def CompareStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHou
         print(f"wv: {selectedWavelengths[i]} nm: L/UnL: {ratio }, err {err_ratio}  -ln(I(c)/Io) = { lnRatio } err:{err_lnRatio}")
     
     return
+#end Function
+
+
+
+
+
+#============================================================================
+#=================DEPRECATED CODE ===========================================
+#============================================================================
+
+def getSelectedWavelengthsAtTimeStamp(requestedElapsedTime,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities):
+    """
+    DEPRECATED
+    DO NOT USE
+    """
+    
+    timeIndex=TimeStampToIndex(requestedElapsedTime,timesFromLaunchInHours)
+    #return the intensities of the selected Wavelengths for this spectrum
+    selectedIntensities=[]
+    for selectedWavelength in selectedWavelengths:
+        selectedIntensity = intensities[timeIndex,wavelengthToIndex(selectedWavelength,wavelengths)]
+        selectedIntensities.append(selectedIntensity)
+    #endFor
+    return selectedIntensities
+#end function
+
+def printUnloadedVsLoadedComparison(unloadedTimeStamp,loadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities):
+    """
+    DEPRECATED
+    DO NOT USE
+    """
+    unloadedSelectedIntensities = getSelectedWavelengthsAtTimeStamp(unloadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities)
+    loadedSelectedIntensities   = getSelectedWavelengthsAtTimeStamp(  loadedTimeStamp,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities)
+    print()
+    print(f"Unloaded VS Loaded Sample for Selected Wavelengths")
+    for i in range(len(unloadedSelectedIntensities)):
+        ratio = loadedSelectedIntensities[i]/unloadedSelectedIntensities[i]
+        lnRatio= -np.log(loadedSelectedIntensities[i]/unloadedSelectedIntensities[i])
+        print(f"wv: {selectedWavelengths[i]} nm: L/UnL: {ratio  } -ln(I(c)/Io) = { lnRatio }")
+#end function
+
 
