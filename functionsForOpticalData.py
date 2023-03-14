@@ -260,16 +260,49 @@ def plotAverageIntensityOverTime(timesFromLaunchInHours,averageIntensities,integ
     plt.show()    
 #end function
 
+#--------------------------------------
+def TimeStampToIndex(requestedElapsedTime,timesFromLaunchInHours):
+    #locating (by index) the spectrum with time closest to the requested time
+    timeIndex=0
+    while(timesFromLaunchInHours[timeIndex]<requestedElapsedTime): 
+        timeIndex+=1
+    return timeIndex
+    
+#end function
+
+
+
+#-------------------------------------
+def plotSpectrumAtTimestamps(timesFromLaunchInHours,wavelengths,intensities,reqTimeStamps,isLoadingComp): 
+        fig3,ax3=plt.subplots()
+        ax3.set_xlabel("wavelength (nm)");ax3.set_ylabel('Intensity')
+        
+        #labeling
+        if(isLoadingComp):
+            labels=["Unloaded","Loaded"]
+        else:
+            labels=[]
+            for reqTimeStamp in reqTimeStamps:labels.append(f"time: {reqTimeStamp}")
+        
+        counter=0
+        for reqTimeStamp in reqTimeStamps:
+            timeIndex=TimeStampToIndex(reqTimeStamp,timesFromLaunchInHours)
+            plt.plot(wavelengths,intensities[timeIndex,:],ms=1,label=labels[counter])
+            counter+=1
+        ax3.legend()
+        plt.show()
+        return fig3
+#end function
+
+
 #----------------------------------------
 def getSelectedWavelengthsAtTimeStamp(requestedElapsedTime,timesFromLaunchInHours,selectedWavelengths,wavelengths,intensities):
     """
     To be used internally in the functions module
     DO NOT CALL
     """
-    #locating (by index) the spectrum with time closest to the requested time
-    timeIndex=0
-    while(timesFromLaunchInHours[timeIndex]<requestedElapsedTime): 
-        timeIndex+=1
+    
+    timeIndex=TimeStampToIndex(requestedElapsedTime,timesFromLaunchInHours)
     #return the intensities of the selected Wavelengths for this spectrum
     selectedIntensities=[]
     for selectedWavelength in selectedWavelengths:
@@ -333,7 +366,7 @@ def GetStatisticsNearSelectedWavelengths(wavelengths,intensitiesSpec,selectedWav
     return meanIntensities, stdsIntensities
 
 
-def ComapreStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHours,wavelengths,intensities,selectedWavelengths,unloadedTimeStamp,loadedTimeStamp):
+def CompareStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHours,wavelengths,intensities,selectedWavelengths,unloadedTimeStamp,loadedTimeStamp):
     """
 
     Parameters

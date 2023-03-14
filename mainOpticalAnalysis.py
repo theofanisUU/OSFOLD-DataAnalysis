@@ -15,18 +15,20 @@ integrFinishWav=1000  #last wavelength in the region of interest
 
 #Wavelengths of interest requiring more information
 selectedWavelengths=[600,700,800,900,1000]
+
 #Note: Again, any quantities extracted and calculated for the "selected wavelengths"
 #      will in reality correspond to wavelengths very close to the requested ones
 #      within 0.5nm
 
 #Optional: Choose whether to plot the first spectrum
-plotFirstSpectrum=False
+plotFirstSpectrum=True
 
 #Optional: Choose timestamps to compare intensities on selected wavelengths
 #Functionality aimed on comparing thin films before and after H2 loading
 compareTimestamps=True
-unloadedTimeStamp=1
-loadedTimeStamp  =8.5
+plotLoadedUnloadedSpectra=True
+unloadedTimeStamp=4.8
+loadedTimeStamp  =2
 #========================================================================================================
 
 #----Functionality Section----
@@ -54,4 +56,8 @@ if(plotFirstSpectrum): functs.PlotFirstSpectrum(wavelengths,IntensitiesRef)
 
 #Optional: 
 if(compareTimestamps):    
-    functs.ComapreStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHours,wavelengths,intensities,selectedWavelengths,unloadedTimeStamp,loadedTimeStamp)
+    functs.CompareStatisticsOfSelectedWavelengths(spectrumDataList,timesFromLaunchInHours,wavelengths,intensities,selectedWavelengths,unloadedTimeStamp,loadedTimeStamp)
+
+#optional
+if(plotLoadedUnloadedSpectra): 
+    functs.plotSpectrumAtTimestamps(timesFromLaunchInHours,wavelengths,intensities,[unloadedTimeStamp,loadedTimeStamp],True) 
